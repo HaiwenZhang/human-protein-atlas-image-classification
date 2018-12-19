@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 from torchvision import models
 
@@ -23,21 +22,19 @@ def initialize_pretrained_model(model_name, num_labels, feature_extract, use_pre
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_labels)
         input_size = 224
-    
     return model_ft, input_size
 
 
 class MyModel(nn.Module):
-
     def __init__(self, model_name, num_labels, feature_extract, use_pretrained=True):
         super(MyModel, self).__init__()
-        self.pretrained_model, self.input_size = initialize_pretrained_model(model_name, 
+        self.pretrained_model, self.input_size = initialize_pretrained_model(model_name,
             num_labels, feature_extract, use_pretrained=True)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.pretrained_model(x)
-        x = self.sigmoid(x)
+        # x = self.sigmoid(x)
         return x
 
     def image_size(self):

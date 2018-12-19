@@ -8,7 +8,7 @@ from torch.utils.data.dataset import random_split
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from data.dataload import get_dateloaders
-from models.resnet import MyModel
+from models.net import MyModel
 from train import train_model
 from torch.optim import lr_scheduler
 
@@ -50,7 +50,7 @@ valid_transform = transforms.Compose([
     normalize
 ])
 
-criterion = torch.nn.MultiLabelMarginLoss()
+criterion = torch.nn.MultiLabelSoftMarginLoss()
 
 # Observe that all parameters are being optimized
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
