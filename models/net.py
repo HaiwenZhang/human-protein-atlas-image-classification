@@ -24,12 +24,14 @@ def initialize_pretrained_model(model_name, num_labels, feature_extract, use_pre
         input_size = 224
     return model_ft, input_size
 
-
 class MyModel(nn.Module):
-    def __init__(self, model_name, num_labels, feature_extract, use_pretrained=True):
-        super(MyModel, self).__init__()
-        self.pretrained_model, self.input_size = initialize_pretrained_model(model_name,
-            num_labels, feature_extract, use_pretrained=True)
+    def __init__(self, params):
+
+        super(MyModel, self).__init__()        
+        self.pretrained_model, self.input_size =initialize_pretrained_model(params.model_name,
+                                                                            params.num_labels,
+                                                                            params.feature_extract,
+                                                                            params.use_pretrained)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
@@ -39,7 +41,6 @@ class MyModel(nn.Module):
 
     def image_size(self):
         return self.input_size
-
 
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:

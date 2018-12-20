@@ -24,7 +24,7 @@ def f1_loss(input, target, eps=1E-8):
     # 调和平均
     f1 = 2 * precision * recall / (precision + recall + eps)
     # 对所有label的F1 loss取均值
-    f1 = torch.mean(f1)
+    f1 = torch.mean(f1)    
     return f1
 
 

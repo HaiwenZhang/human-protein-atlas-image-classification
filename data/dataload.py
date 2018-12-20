@@ -1,19 +1,12 @@
 import numpy as np
 import torch
-from torch.utils.data.dataset import random_split
 from torch.utils.data.sampler import SubsetRandomSampler
 from .dataset import MultiBandMultiLabelDataset
 
 
-def get_dateloaders(csv_file, 
-                    data_dir,
+def get_dateloaders(params,
                     train_transform,
-                    valid_transform,
-                    batch_size = 32,
-                    random_seed = 30,
-                    valid_size=0.1,
-                    shuffle=True,
-                    num_workers=5):
+                    valid_transform):
     """
     Utility function for loading and returning train and valid
     multi-process iterators over the CIFAR-10 dataset. A sample
@@ -37,8 +30,19 @@ def get_dateloaders(csv_file,
     - train_loader: training set iterator.
     - valid_loader: validation set iterator.
     """
-    train_dataset = MultiBandMultiLabelDataset(csv_file=csv_file, root_dir=data_dir, transform=train_transform)
-    valid_dataset = MultiBandMultiLabelDataset(csv_file=csv_file, root_dir=data_dir, transform=valid_transform)
+
+    csv_file = params.csv_file
+    data_dir = params.data_dir
+    batch_size = params.batch_size
+    random_seed = params.random_seed
+    valid_size = params.valid_size
+    shuffle = params.shuffle
+    num_workers = params.num_workers
+
+    train_dataset = MultiBandMultiLabelDataset(
+        csv_file=csv_file, root_dir=data_dir, transform=train_transform)
+    valid_dataset = MultiBandMultiLabelDataset(
+        csv_file=csv_file, root_dir=data_dir, transform=valid_transform)
 
     dataset_size = len(train_dataset)
     indices = list(range(dataset_size))
@@ -53,10 +57,10 @@ def get_dateloaders(csv_file,
     train_sampler = SubsetRandomSampler(train_idx)
     valid_sampler = SubsetRandomSampler(valid_idx)
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, 
-                                                sampler=train_sampler, num_workers=num_workers)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size,
+                                               sampler=train_sampler, num_workers=num_workers)
     valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size,
-                                                sampler=valid_sampler, num_workers=num_workers)
+                                               sampler=valid_sampler, num_workers=num_workers)
     dataloaders = {
         'train': train_loader,
         'val': valid_loader

@@ -22,14 +22,14 @@ def train_model(model, dataloader, loss_fn, optimizer, scheduler, params):
             if params.cuda:
                 train_batch, labels_batch = train_batch.cuda(
                     async=True), labels_batch.cuda(async=True)
-                
+
             # convert to torch Variables
             train_batch, labels_batch = Variable(
                 train_batch), Variable(labels_batch)
-            
+
             output_batch = model(train_batch)
             loss = loss_fn(output_batch, labels_batch)
-            
+
             # clear previous gradients, compute gradients of all variables wrt loss
             optimizer.zero_grad()
             loss.backward()
@@ -37,42 +37,45 @@ def train_model(model, dataloader, loss_fn, optimizer, scheduler, params):
             # performs updates using calculated gradients
             optimizer.step()
 
+            # adjust learnign rate
+            scheduler.step()
+
             running_loss += loss.item() * train_batch.size(0)
             output_batch = F.sigmoid(output_batch)
-            running_f1_loss += f1_loss(output_batch, labels_batch) * train_batch.size(0)
+            running_f1_loss += f1_loss(output_batch,
+                                       labels_batch) * train_batch.size(0)
 
     train_loss = running_loss / total
     train_f1_loss = running_f1_loss / total
 
-    return train_loss, train_f1_loss                
+    return train_loss, train_f1_loss
+
 
 def train_and_evaluate(model, dataloaders, optimizer, loss_fn, scheduler, params):
 
-    train_loss_list = []
-    train_f1_loss_list = []
-    val_loss_list = []
-    val_f1_loss_list = []
-    
     best_val_f1_loss = 0.0
 
     mb = master_bar(range(params.num_epochs))
 
     params.mb = mb
-    
+
     for epoch in mb:
         logging.info("Epoch {}/{}".format(epoch + 1, params.num_epochs))
 
-        train_loss, train_f1_loss = train_model(model, dataloaders["train"], loss_fn, optimizer, scheduler, params)
-        val_loss, val_f1_loss = evaluate(model, dataloaders["val"], loss_fn, params)
+        train_loss, train_f1_loss = train_model(
+            model, dataloaders["train"], loss_fn, optimizer, scheduler, params)
+        val_loss, val_f1_loss = evaluate(
+            model, dataloaders["val"], loss_fn, params)
 
-        train_loss_list.append(train_loss)
-        train_f1_loss_list.append(train_f1_loss)
-        val_loss_list.append(val_loss)
-        val_f1_loss_list.append(val_f1_loss)
-        
+        list = []
+        list.append(train_loss)
+        list.append(train_f1_loss)
+        list.append(val_loss)
+        list.append(val_f1_loss)
+        utils.append_train_metrics(list)
+
         logging.info("Epoch {}/{}. Train loss: {}, Train F1 loss: {}. Val loss: {}, Val F1 loss: {}".format(
             epoch + 1, params.num_epochs, train_loss, train_f1_loss, val_loss, val_f1_loss))
-
 
         is_best = val_f1_loss >= best_val_f1_loss
 
@@ -86,6 +89,3 @@ def train_and_evaluate(model, dataloaders, optimizer, loss_fn, scheduler, params
             logging.info("- Found new best f1 loss")
 
             best_val_f1_loss = val_f1_loss
-
-            
-        
