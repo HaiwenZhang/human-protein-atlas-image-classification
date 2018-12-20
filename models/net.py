@@ -32,7 +32,7 @@ class MyModel(nn.Module):
                                                                             params.num_labels,
                                                                             params.feature_extract,
                                                                             params.use_pretrained)
-        self.sigmoid = nn.Sigmoid()
+        # self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.pretrained_model(x)

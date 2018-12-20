@@ -1,5 +1,6 @@
 import os
 import argparse
+import logging
 import torch
 import torch.optim as optim
 from torchvision import transforms
@@ -47,7 +48,7 @@ def setup_and_train(parmas):
 
     # Observe that all parameters are being optimized
     # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    optimizer = optim.Adam(model.parameters(), lr=params.learning_rage)
+    optimizer = optim.Adam(model.parameters(), lr=params.learning_rate)
 
     # Decay LR by a factor of 0.1 every 7 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(
@@ -59,7 +60,6 @@ def setup_and_train(parmas):
 
     train_and_evaluate(model=model,
                        dataloaders=dataloaders,
-                       loss_fn=loss_fn,
                        optimizer=optimizer,
                        loss_fn=loss_fn,
                        scheduler=exp_lr_scheduler,
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     params.shuffle_dataset = shuffle_dataset
     params.shuffle = shuffle
     params.feature_extract = feature_extract
-    parasm.use_pretrained = use_pretrained
+    params.use_pretrained = use_pretrained
 
     # Create the input data pipeline
     logging.info("Loading the datasets...")

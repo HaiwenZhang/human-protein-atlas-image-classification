@@ -76,6 +76,6 @@ class MultiBandMultiLabelDataset(Dataset):
         for index in label_list:
             vec[index] = 1.0
         vec = torch.from_numpy(vec)
-        return vec.long()
+        return vec.float()
 
 

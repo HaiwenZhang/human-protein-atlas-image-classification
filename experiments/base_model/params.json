@@ -5,6 +5,7 @@
     "num_workers": 5,
     "num_labels": 28,
     "valid_size": 0.1,
+    "random_seed": 230,
     "step_size": 5,
     "gama": 0.9,
     "model_name": "resnet50"
