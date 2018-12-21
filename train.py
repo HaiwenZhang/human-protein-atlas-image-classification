@@ -1,9 +1,9 @@
 import logging
-import torch.nn.functional as F
+import torch
 from torch.autograd import Variable
 from fastprogress import master_bar, progress_bar
 
-from loss import f1_loss
+from loss import f1_loss, acc
 from evaluate import evaluate
 import utils
 
@@ -14,8 +14,11 @@ def train_model(model, dataloader, loss_fn, optimizer, scheduler, params):
     model.train()
 
     total = len(dataloader)
+
     running_loss = 0.0
-    running_f1_loss = 0.0
+    # running_f1_loss = 0.0
+    acc_rate = 0.0
+
     for j in progress_bar(range(total), parent=params.mb):
         for i, (train_batch, labels_batch) in enumerate(dataloader):
             # move to GPU if available
@@ -40,20 +43,25 @@ def train_model(model, dataloader, loss_fn, optimizer, scheduler, params):
             # adjust learnign rate
             scheduler.step()
 
-            running_loss += loss.item() * train_batch.size(0)
-            output_batch = F.sigmoid(output_batch)
-            running_f1_loss += f1_loss(output_batch,
-                                       labels_batch) * train_batch.size(0)
+            running_loss += loss.item()
+            # temp_f1_loss = f1_loss(output_batch, labels_batch)
+            # running_f1_loss += temp_f1_loss
+            temp_acc_rate = acc(output_batch, labels_batch)
+            acc_rate += temp_acc_rate
 
-    train_loss = running_loss / total
-    train_f1_loss = running_f1_loss / total
+            params.mb.child.comment = "loss {} and acc {}".format(loss.item(), temp_acc_rate)
 
-    return train_loss, train_f1_loss
+    train_loss =running_loss / total
+    train_acc = acc_rate / total
+
+    return train_loss, train_acc
 
 
 def train_and_evaluate(model, dataloaders, optimizer, loss_fn, scheduler, params):
 
-    best_val_f1_loss = 0.0
+    metrics = utils.RunningMetrics()
+
+    best_val_acc = 0.0
 
     mb = master_bar(range(params.num_epochs))
 
@@ -62,22 +70,22 @@ def train_and_evaluate(model, dataloaders, optimizer, loss_fn, scheduler, params
     for epoch in mb:
         logging.info("Epoch {}/{}".format(epoch + 1, params.num_epochs))
 
-        train_loss, train_f1_loss = train_model(
+        train_loss, train_acc = train_model(
             model, dataloaders["train"], loss_fn, optimizer, scheduler, params)
-        val_loss, val_f1_loss = evaluate(
+        val_loss, val_acc = evaluate(
             model, dataloaders["val"], loss_fn, params)
 
         list = []
         list.append(train_loss)
-        list.append(train_f1_loss)
+        list.append(train_acc)
         list.append(val_loss)
-        list.append(val_f1_loss)
-        utils.append_train_metrics(list)
+        list.append(val_acc)
+        metrics.update(list)
 
-        logging.info("Epoch {}/{}. Train loss: {}, Train F1 loss: {}. Val loss: {}, Val F1 loss: {}".format(
-            epoch + 1, params.num_epochs, train_loss, train_f1_loss, val_loss, val_f1_loss))
+        logging.info("Epoch {}/{}. Train loss: {}, Train acc: {}. Val loss: {}, Val acc: {}".format(
+            epoch + 1, params.num_epochs, train_loss, train_acc, val_loss, val_acc))
 
-        is_best = val_f1_loss >= best_val_f1_loss
+        is_best = val_acc >= best_val_acc
 
         utils.save_checkpoint({'epoch': epoch + 1,
                                'state_dict': model.state_dict(),
@@ -86,6 +94,8 @@ def train_and_evaluate(model, dataloaders, optimizer, loss_fn, scheduler, params
                               checkpoint=params.model_dir)
 
         if is_best:
-            logging.info("- Found new best f1 loss")
+            logging.info("- Found new best val acc")
 
-            best_val_f1_loss = val_f1_loss
+            best_val_acc = val_acc
+
+    metrics.save_to_csv(params.model_metrics_file)

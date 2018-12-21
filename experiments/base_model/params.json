@@ -1,8 +1,8 @@
 {
     "learning_rate": 1e-3,
-    "batch_size": 32,
-    "num_epochs": 10,
-    "num_workers": 5,
+    "batch_size": 128,
+    "num_epochs": 50,
+    "num_workers": 8,
     "num_labels": 28,
     "valid_size": 0.1,
     "random_seed": 230,

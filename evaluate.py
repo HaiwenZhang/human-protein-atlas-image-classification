@@ -1,7 +1,7 @@
 from torch.autograd import Variable
-import torch.nn.functional as F
+import torch
 
-from loss import f1_loss
+from loss import f1_loss, acc
 
 
 def evaluate(model, dataloader, loss_fn, params):
@@ -14,7 +14,8 @@ def evaluate(model, dataloader, loss_fn, params):
     total = len(dataloader)
 
     running_loss = 0.0
-    running_f1_loss = 0.0
+    # running_f1_loss = 0.0
+    acc_rate = 0.0
 
     for data_batch, labels_batch in dataloader:
         # move to GPU if available
@@ -29,13 +30,12 @@ def evaluate(model, dataloader, loss_fn, params):
         output_batch = model(data_batch)
         loss = loss_fn(output_batch, labels_batch)
 
-        running_loss += loss.item() * data_batch.size(0)
-
-        output_batch = F.sigmoid(output_batch)
-        running_f1_loss += f1_loss(output_batch,
-                                   labels_batch) * data_batch.size(0)
+        running_loss += loss.item()
+        # running_f1_loss += f1_loss(output_batch,
+        #                           labels_batch) * data_batch.size(0)
+        acc_rate += acc(output_batch, labels_batch)
 
     eval_loss = running_loss / total
-    eval_f1_loss = running_f1_loss / total
+    eval_acc = acc_rate / total
 
-    return eval_loss, eval_f1_loss
+    return eval_loss, eval_acc

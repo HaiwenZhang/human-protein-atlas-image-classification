@@ -5,9 +5,19 @@ import json
 import pandas as pd
 import torch
 
-metrics_index = ["Train loss", "Train F1", "Val loss", "Val F1"]
-metrics_pd = pd.DataFrame(columns=metrics_index)
 
+class RunningMetrics():
+
+    def __init__(self):
+        self.index = ["Train loss", "Train F1", "Val loss", "Val F1"]
+        self.metrics_pd = pd.DataFrame(columns=self.index)
+
+    def update(self, list):
+        self.metrics_pd = self.metrics_pd.append(pd.Series(list, index=self.index),
+                                   ignore_index=True)
+
+    def save_to_csv(self, path):
+        self.metrics_pd.to_csv(path, sep="\t", encoding="utf-8")
 
 class Params():
     """Class that loads hyperparameters from a json file.n
@@ -68,15 +78,6 @@ def set_logger(log_path):
         stream_handler = logging.StreamHandler()
         stream_handler.setFormatter(logging.Formatter('%(message)s'))
         logger.addHandler(stream_handler)
-
-
-def append_train_metrics(list):
-    metrics_pd = metrics_pd.append(pd.Series(list, index=metrics_index),
-                                   ignore_index=True)
-
-
-def save_train_metrics(params):
-    metrics_pd.to_csv(params.model_metrics_file, sep="\t", encoding="utf-8")
 
 
 def save_checkpoint(state, is_best, checkpoint):

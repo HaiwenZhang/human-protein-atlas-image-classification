@@ -2,8 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.tar
+*.log
 # C extensions
 *.so
+*/.ipynb_checkpoints/
 
 .vscode/

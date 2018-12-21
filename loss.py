@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-
+from torch.nn import functional as F
 
 def f1_loss(input, target, eps=1E-8):
     """ Micro averaging f1 loss
@@ -28,7 +28,35 @@ def f1_loss(input, target, eps=1E-8):
     return f1
 
 
-def test():
+def acc(preds,targs,th=0.5):
+    preds = (preds > th).int()
+    targs = targs.int()
+    return (preds==targs).float().mean()
+
+
+class FocalLoss(torch.nn.Module):
+    """Obejct detection multi labels class loss function
+       more https://becominghuman.ai/investigating-focal-and-dice-loss-for-the-kaggle-2018-data-science-bowl-65fb9af4f36c
+    """
+    def __init__(self, gamma=2):
+        super().__init__()
+        self.gamma = gamma
+        
+    def forward(self, input, target):
+        # Inspired by the implementation of binary_cross_entropy_with_logits
+        if not (target.size() == input.size()):
+            raise ValueError("Target size ({}) must be the same as input size ({})".format(target.size(), input.size()))
+
+        max_val = (-input).clamp(min=0)
+        loss = input - input * target + max_val + ((-max_val).exp() + (-input - max_val).exp()).log()
+
+        # This formula gives us the log sigmoid of 1-p if y is 0 and of p if y is 1
+        invprobs = F.logsigmoid(-input * (target * 2 - 1))
+        loss = (invprobs * self.gamma).exp() * loss
+        
+        return loss.mean()
+
+def test_f1_loss():
     y_pred = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0],
                        [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0],
                        [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
@@ -49,4 +77,4 @@ def test():
     print(f1)
 
 if __name__ == '__main__':
-    test()
+    test_f1_loss()

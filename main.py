@@ -13,6 +13,7 @@ from train import train_and_evaluate
 from torch.optim import lr_scheduler
 
 import utils
+from loss import FocalLoss
 
 
 parser = argparse.ArgumentParser()
@@ -44,7 +45,7 @@ def setup_and_train(parmas):
         normalize
     ])
 
-    loss_fn = torch.nn.MultiLabelSoftMarginLoss()
+    loss_fn = FocalLoss()
 
     # Observe that all parameters are being optimized
     # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
@@ -85,18 +86,17 @@ if __name__ == "__main__":
     # Set the logger
     utils.set_logger(os.path.join(args.model_dir, 'train.log'))
 
-    params.csv_file = os.path.join(args.image_dir, 'train.csv')
-    params.data_dir = os.path.join(args.image_dir, 'train')
+    params.csv_file = os.path.join(args.image_dir, 'small_data.csv')
+    params.data_dir = os.path.join(args.image_dir, 'processing_train')
     params.model_metrics_file = os.path.join(args.model_dir, "metrics.csv")
     params.shuffle_dataset = shuffle_dataset
     params.shuffle = shuffle
     params.feature_extract = feature_extract
     params.use_pretrained = use_pretrained
+    params.model_dir = args.model_dir
 
     # Create the input data pipeline
     logging.info("Loading the datasets...")
 
     setup_and_train(params)
     
-    # save train metrics data to model csv file
-    utils.save_train_metrics(params)

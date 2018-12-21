@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import pandas as pd
 import PIL
+import cv2
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as T
 
@@ -52,6 +53,36 @@ class MultiBandMultiLabelDataset(Dataset):
         return len(self.csv_pd)
 
     def __getitem__(self, index):
+        path = os.path.join(self.root_dir, self.csv_pd.iloc[index].Id+".png")
+        x = PIL.Image.open(path)
+        if self.transform:
+            x = self.transform(x)
+        data = self.csv_pd.iloc[index].Target
+        label = list(map(int, data.split(" ")))
+        y = self.multilabels_to_vec(28, label)
+        return x, y
+        
+
+    def multilabels_to_vec(self, vec_len, label_list):
+        vec = np.zeros((vec_len,))
+        for index in label_list:
+            vec[index] = 1.0
+        vec = torch.from_numpy(vec)
+        return vec.float()
+
+
+class MultiBandMultiLabelDatasetWithMerge4Channel(Dataset):
+
+    def __init__(self, csv_file, root_dir, transform=None):
+        self.BANDS_NAMES = ['_red.png', '_green.png', '_blue.png', '_yellow.png']
+        self.csv_pd = pd.read_csv(csv_file)
+        self.root_dir = root_dir
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.csv_pd)
+
+    def __getitem__(self, index):
         path = os.path.join(self.root_dir, self.csv_pd.iloc[index].Id)
         x = self.__load_multiband_image(path)
         if self.transform:
@@ -77,5 +108,4 @@ class MultiBandMultiLabelDataset(Dataset):
             vec[index] = 1.0
         vec = torch.from_numpy(vec)
         return vec.float()
-
 
