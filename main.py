@@ -4,11 +4,9 @@ import logging
 import torch
 import torch.optim as optim
 from torchvision import transforms
-from torch.utils.data.dataset import random_split
-from torch.utils.data.sampler import SubsetRandomSampler
 
 from data.dataload import get_dateloaders
-from models.net import MyModel
+from models.resnet import Net
 from train import train_and_evaluate
 from torch.optim import lr_scheduler
 
@@ -28,7 +26,7 @@ use_pretrained = True
 normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 
 def setup_and_train(parmas):
-    model = MyModel(params).cuda() if params.cuda else MyModel(params)
+    model = Net(params).cuda() if params.cuda else Net(params)
 
     image_size = model.image_size()
     train_transform = transforms.Compose([
@@ -49,7 +47,11 @@ def setup_and_train(parmas):
 
     # Observe that all parameters are being optimized
     # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    optimizer = optim.Adam(model.parameters(), lr=params.learning_rate)
+    optimizer = optim.SGD([
+                {'params': model.base_parameters(), 'lr': 1e-4},
+                {'params': model.last_parameters}
+            ], lr=1e-2, momentum=0.9)
+    # optimizer = optim.Adam(model.parameters(), lr=params.learning_rate)
 
     # Decay LR by a factor of 0.1 every 7 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(
@@ -99,4 +101,3 @@ if __name__ == "__main__":
     logging.info("Loading the datasets...")
 
     setup_and_train(params)
-    
