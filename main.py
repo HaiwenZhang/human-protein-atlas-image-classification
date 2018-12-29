@@ -48,9 +48,9 @@ def setup_and_train(parmas):
     # Observe that all parameters are being optimized
     # optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     optimizer = optim.SGD([
-                {'params': model.base_parameters(), 'lr': 1e-4},
-                {'params': model.last_parameters}
-            ], lr=1e-2, momentum=0.9)
+                {'params': model.base_parameters},
+                {'params': model.last_parameters, 'lr': 1e-2}
+            ], lr=1e-3, momentum=0.9)
     # optimizer = optim.Adam(model.parameters(), lr=params.learning_rate)
 
     # Decay LR by a factor of 0.1 every 7 epochs

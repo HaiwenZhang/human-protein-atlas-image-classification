@@ -15,11 +15,16 @@ def train_model(model, dataloader, loss_fn, optimizer, scheduler, params):
 
     total = len(dataloader)
 
-    running_loss = 0.0
-    # running_f1_loss = 0.0
-    acc_rate = 0.0
+
+
+    train_loss = 0.0
+    train_acc = 0.0
 
     for j in progress_bar(range(total), parent=params.mb):
+        running_loss = 0.0
+        # running_f1_loss = 0.0
+        acc_rate = 0.0
+        
         for i, (train_batch, labels_batch) in enumerate(dataloader):
             # move to GPU if available
             if params.cuda:
@@ -50,9 +55,11 @@ def train_model(model, dataloader, loss_fn, optimizer, scheduler, params):
             acc_rate += temp_acc_rate
 
             params.mb.child.comment = "loss {} and acc {}".format(loss.item(), temp_acc_rate)
+        
+        train_loss = running_loss / total
+        train_acc = acc_rate / total
 
-    train_loss =running_loss / total
-    train_acc = acc_rate / total
+
 
     return train_loss, train_acc
 
